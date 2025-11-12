@@ -6,15 +6,17 @@
     <title>Answer Verifier - Encoder + Decoder</title>
     <style>
         :root {
-            --bg: #0f1724;
-            --card: #0b1220;
-            --muted: #94a3b8;
+            --bg: #071326;
+            --panel: #0b1220;
+            --muted: #9aa8bf;
             --accent: #60a5fa;
             --accent-2: #7c3aed;
             --glass: rgba(255, 255, 255, 0.03);
             --success: #10b981;
             --danger: #ef4444;
-            --surface: #0b1220;
+            --surface: #071326;
+            --card: #0f1724;
+            --toast-bg: rgba(8, 12, 20, 0.85);
             font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
         }
 
@@ -25,21 +27,21 @@
         html, body {
             height: 100%;
             margin: 0;
-            background: linear-gradient(180deg, #071126 0%, #071827 60%);
+            background: linear-gradient(180deg, var(--bg) 0%, #02101a 70%);
             color: #e6eef8
         }
 
         .wrap {
             max-width: 1100px;
-            margin: 36px auto;
-            padding: 28px
+            margin: 28px auto;
+            padding: 20px
         }
 
         header {
             display: flex;
             align-items: center;
             gap: 16px;
-            margin-bottom: 18px
+            margin-bottom: 12px
         }
 
         header h1 {
@@ -52,6 +54,31 @@
             margin: 0;
             color: var(--muted);
             font-size: 13px
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            background: transparent;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 18px
+        }
+
+        .tab {
+            padding: 10px 18px;
+            border-radius: 10px;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.03)
+        }
+
+        .tab.active {
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            color: white;
+            font-weight: 700
         }
 
         .grid {
@@ -193,24 +220,63 @@
             color: var(--danger);
             border: 1px solid rgba(239, 68, 68, 0.06)
         }
+
+        /* toast */
+        .toast {
+            position: fixed;
+            top: 18px;
+            right: 18px;
+            background: var(--toast-bg);
+            padding: 12px 16px;
+            border-radius: 10px;
+            color: #dffcf0;
+            box-shadow: 0 6px 20px rgba(2, 6, 23, 0.6);
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.04)
+        }
+
+        .toast .title {
+            font-weight: 800
+        }
+
+        .toast.success {
+            border-left: 6px solid var(--success)
+        }
+
+        .toast.hide {
+            display: none
+        }
+
+        .madeby {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 10px
+        }
+
     </style>
 </head>
 <body>
 <div class="wrap">
     <header>
         <div>
-            <h1>Answer Verifier - Encoder + Decoder</h1>
-            <p>Client-side web app. Uses PBKDF2-SHA256 to store only a salted hash of the answer. No server
-                required.</p>
+            <h1>Answer Verifier</h1>
+            <p>Encoder + Decoder in one file — client-side, PBKDF2-SHA256.</p>
         </div>
         <div style="margin-left:auto;text-align:right">
-            <div class="badge">Portable HTML - Open locally or host on GitHub Pages</div>
-            <div class="fine">Default PBKDF2 iterations: 200000</div>
+            <div class="badge">Dark UI • No server required</div>
         </div>
     </header>
 
+    <div class="tabs" role="tablist">
+        <div class="tab active" id="tab-enc" role="tab" aria-selected="true">Encoder</div>
+        <div class="tab" id="tab-dec" role="tab" aria-selected="false">Decoder</div>
+    </div>
+
     <div class="grid">
-        <section class="card">
+        <section class="card" id="panel-enc">
             <h2>Encoder</h2>
             <label for="enc-question">Question</label>
             <textarea id="enc-question" placeholder="Write the question here"></textarea>
@@ -226,7 +292,7 @@
                     <label class="small">PBKDF2 iterations</label>
                     <input id="enc-iter" type="number" value="200000" min="1000" step="1000">
                 </div>
-                <div style="width:140px">
+                <div style="width:160px">
                     <label class="small">Token format</label>
                     <select id="enc-format">
                         <option value="compact">Compact JSON (base64)</option>
@@ -252,9 +318,11 @@
                 <button class="copy" id="copy-token">Copy token</button>
                 <button class="ghost" id="download-token">Download .txt</button>
             </div>
+            <div class="madeby">Made by @kartik2005221 • <a href="https://tr.ee/ktk" target="_blank"
+                                                            style="color:var(--accent)">tr.ee/ktk</a></div>
         </section>
 
-        <section class="card">
+        <section class="card" id="panel-dec" style="display:none">
             <h2>Decoder</h2>
             <label for="dec-token">Paste Base64 token</label>
             <textarea id="dec-token" placeholder="Paste token here"></textarea>
@@ -281,10 +349,12 @@
             </div>
 
             <pre id="token-json" class="output" style="display:none;max-height:220px"></pre>
+            <div class="madeby">Made by @kartik2005221 • <a href="https://tr.ee/ktk" target="_blank"
+                                                            style="color:var(--accent)">tr.ee/ktk</a></div>
         </section>
 
         <section class="card full-width">
-            <h2>Notes and options</h2>
+            <h2>Options & Notes</h2>
             <div class="row" style="gap:16px">
                 <div style="flex:1">
                     <label class="small">Max attempts (0 = unlimited)</label>
@@ -312,14 +382,19 @@
     </div>
 
     <footer>
-        <div class="small">Made for private practice. Want a hosted version or a multi-question package? Copy this file
-            to host on GitHub Pages.
+        <div class="small">Host on GitHub Pages by dropping this file into a repo's gh-pages branch or the main branch
+            (Pages settings).
         </div>
     </footer>
 </div>
 
+<div id="toast" class="toast hide" role="status" aria-live="polite">
+    <div class="title">Congrats</div>
+    <div class="msg">Correct answer — well done.</div>
+</div>
+
 <script>
-    // Utility functions
+    // Utils
     function hexFromBytes(bytes) {
         return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
     }
@@ -343,6 +418,29 @@
         return hexFromBytes(new Uint8Array(bits));
     }
 
+    // Tabs
+    const tabEnc = document.getElementById('tab-enc');
+    const tabDec = document.getElementById('tab-dec');
+    const panelEnc = document.getElementById('panel-enc');
+    const panelDec = document.getElementById('panel-dec');
+
+    function activateTab(which) {
+        if (which === 'enc') {
+            tabEnc.classList.add('active');
+            tabDec.classList.remove('active');
+            panelEnc.style.display = 'block';
+            panelDec.style.display = 'none';
+        } else {
+            tabDec.classList.add('active');
+            tabEnc.classList.remove('active');
+            panelDec.style.display = 'block';
+            panelEnc.style.display = 'none';
+        }
+    }
+
+    tabEnc.addEventListener('click', () => activateTab('enc'));
+    tabDec.addEventListener('click', () => activateTab('dec'));
+
     // Encoder logic
     document.getElementById('btn-generate').addEventListener('click', async () => {
         const q = document.getElementById('enc-question').value.trim();
@@ -364,7 +462,7 @@
         if (document.getElementById('auto-copy').value === '1') {
             try {
                 await navigator.clipboard.writeText(token);
-            } catch (e) { /* ignore */
+            } catch (e) {
             }
         }
     });
@@ -417,7 +515,6 @@
         try {
             const json = decodeURIComponent(escape(atob(txt)));
             const obj = JSON.parse(json);
-            // basic validation
             if (!obj.q || !obj.salt || !obj.hash) throw new Error('Missing fields');
             loadedPayload = obj;
             attempts = 0;
@@ -429,6 +526,7 @@
             updateAttemptsLabel();
             document.getElementById('result').textContent = '';
             document.getElementById('dec-answer').value = '';
+            activateTab('dec');
         } catch (e) {
             alert('Invalid token. Make sure it is base64 of JSON.');
         }
@@ -480,9 +578,12 @@
         const hashHex = await pbkdf2Hex(guess, loadedPayload.salt, parseInt(loadedPayload.iter || 200000, 10));
         if (hashHex === loadedPayload.hash) {
             document.getElementById('result').innerHTML = '<span class="status ok">Correct</span> You may proceed.';
-            // optional: lock widget to prevent further probing
+            showToast('Correct — well done', 'success');
+            // clear to prevent further probing
             loadedPayload = null;
             document.getElementById('question-block').style.display = 'none';
+            // switch to encoder tab after a moment
+            setTimeout(() => activateTab('enc'), 800);
             return;
         } else {
             const max = parseInt(document.getElementById('max-attempts').value || '0', 10);
@@ -490,13 +591,29 @@
                 const cd = parseInt(document.getElementById('cooldown').value || '30', 10);
                 lockedUntil = Date.now() + cd * 1000;
                 document.getElementById('result').innerHTML = '<span class="status bad">Locked</span> Too many attempts. Wait ' + cd + ' seconds.';
+                showToast('Locked due to too many attempts', '');
             } else {
+                // show red wrong indicator
                 document.getElementById('result').innerHTML = '<span class="status bad">Wrong</span> Try again. Question shown above.';
             }
         }
     }
 
-    // small helpers
+    // Toast
+    const toastEl = document.getElementById('toast');
+    let toastTimer = null;
+
+    function showToast(message, kind) {
+        toastEl.classList.remove('hide');
+        toastEl.querySelector('.msg').textContent = message;
+        toastEl.classList.toggle('success', kind === 'success');
+        if (toastTimer) clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+            toastEl.classList.add('hide');
+        }, 2800);
+    }
+
+    // keyboard
     (function attachEnter() {
         document.getElementById('dec-answer').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
@@ -511,6 +628,9 @@
             }
         });
     })();
+
+    // init
+    activateTab('enc');
 </script>
 </body>
 </html>
