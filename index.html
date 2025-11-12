@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Answer Verifier - Encoder + Decoder</title>
+    <style>
+        :root {
+            --bg: #0f1724;
+            --card: #0b1220;
+            --muted: #94a3b8;
+            --accent: #60a5fa;
+            --accent-2: #7c3aed;
+            --glass: rgba(255, 255, 255, 0.03);
+            --success: #10b981;
+            --danger: #ef4444;
+            --surface: #0b1220;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            background: linear-gradient(180deg, #071126 0%, #071827 60%);
+            color: #e6eef8
+        }
+
+        .wrap {
+            max-width: 1100px;
+            margin: 36px auto;
+            padding: 28px
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 18px
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 20px;
+            letter-spacing: 0.4px
+        }
+
+        header p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns:1fr 1fr;
+            gap: 20px
+        }
+
+        .card {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 6px 20px rgba(2, 6, 23, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.02)
+        }
+
+        .card h2 {
+            margin: 0 0 10px 0;
+            font-size: 16px
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 6px
+        }
+
+        input[type=text], input[type=number], textarea, select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            background: var(--glass);
+            color: #e6eef8;
+            outline: none
+        }
+
+        textarea {
+            min-height: 78px;
+            resize: vertical
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            align-items: center
+        }
+
+        .small {
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px
+        }
+
+        button {
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            border: none;
+            padding: 10px 12px;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600
+        }
+
+        button.ghost {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.04)
+        }
+
+        button.copy {
+            background: linear-gradient(90deg, #334155, #1e293b);
+            padding: 8px 10px
+        }
+
+        .output {
+            margin-top: 12px;
+            background: rgba(2, 6, 23, 0.6);
+            padding: 12px;
+            border-radius: 10px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+            color: #dbeafe;
+            overflow: auto
+        }
+
+        .fine {
+            font-size: 13px;
+            color: var(--muted);
+            margin-top: 6px
+        }
+
+        .full-width {
+            grid-column: 1 / -1
+        }
+
+        footer {
+            margin-top: 18px;
+            color: var(--muted);
+            font-size: 13px
+        }
+
+        /* responsive */
+        @media (max-width: 900px) {
+            .grid {
+                grid-template-columns:1fr
+            }
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 8px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.03);
+            font-size: 12px;
+            color: var(--muted);
+            border: 1px solid rgba(255, 255, 255, 0.02)
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-weight: 700
+        }
+
+        .ok {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.06)
+        }
+
+        .bad {
+            background: rgba(239, 68, 68, 0.08);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.06)
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <header>
+        <div>
+            <h1>Answer Verifier - Encoder + Decoder</h1>
+            <p>Client-side web app. Uses PBKDF2-SHA256 to store only a salted hash of the answer. No server
+                required.</p>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+            <div class="badge">Portable HTML - Open locally or host on GitHub Pages</div>
+            <div class="fine">Default PBKDF2 iterations: 200000</div>
+        </div>
+    </header>
+
+    <div class="grid">
+        <section class="card">
+            <h2>Encoder</h2>
+            <label for="enc-question">Question</label>
+            <textarea id="enc-question" placeholder="Write the question here"></textarea>
+
+            <label for="enc-answer">Answer (will be lowercased)</label>
+            <input id="enc-answer" type="text" placeholder="Correct answer">
+
+            <label for="enc-hint">Hint (optional)</label>
+            <input id="enc-hint" type="text" placeholder="Small hint for the user">
+
+            <div style="display:flex;gap:10px;margin-top:8px">
+                <div style="flex:1">
+                    <label class="small">PBKDF2 iterations</label>
+                    <input id="enc-iter" type="number" value="200000" min="1000" step="1000">
+                </div>
+                <div style="width:140px">
+                    <label class="small">Token format</label>
+                    <select id="enc-format">
+                        <option value="compact">Compact JSON (base64)</option>
+                        <option value="pretty">Pretty JSON inside base64</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="btn-generate">Generate Token</button>
+                <button class="ghost" id="btn-clear-enc">Clear</button>
+            </div>
+
+            <div class="fine">Generated token contains question, hint, salt, hash and iteration count only. It does not
+                contain the plaintext answer.
+            </div>
+
+            <label style="margin-top:12px">Token</label>
+            <div class="row">
+                <textarea id="enc-token" readonly placeholder="Generated token will appear here"></textarea>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:8px">
+                <button class="copy" id="copy-token">Copy token</button>
+                <button class="ghost" id="download-token">Download .txt</button>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>Decoder</h2>
+            <label for="dec-token">Paste Base64 token</label>
+            <textarea id="dec-token" placeholder="Paste token here"></textarea>
+
+            <div class="row" style="margin-top:8px">
+                <button id="btn-load">Load token</button>
+                <button class="ghost" id="btn-show-json">Show token JSON</button>
+                <div style="margin-left:auto" class="small">Attempts: <span id="attempts-left">Unlimited</span></div>
+            </div>
+
+            <div id="question-block" style="display:none;margin-top:12px">
+                <div class="badge">Question</div>
+                <div class="output" id="question-output"></div>
+
+                <label style="margin-top:10px">Your answer</label>
+                <input id="dec-answer" type="text" placeholder="Type your answer here">
+                <div style="display:flex;gap:8px;margin-top:8px">
+                    <button id="btn-submit">Submit</button>
+                    <button class="ghost" id="btn-hint">Hint</button>
+                    <button class="ghost" id="btn-reset">Reset</button>
+                </div>
+
+                <div id="result" class="fine" style="margin-top:10px"></div>
+            </div>
+
+            <pre id="token-json" class="output" style="display:none;max-height:220px"></pre>
+        </section>
+
+        <section class="card full-width">
+            <h2>Notes and options</h2>
+            <div class="row" style="gap:16px">
+                <div style="flex:1">
+                    <label class="small">Max attempts (0 = unlimited)</label>
+                    <input id="max-attempts" type="number" value="0" min="0">
+                </div>
+                <div style="flex:1">
+                    <label class="small">Cooldown after lockout (seconds)</label>
+                    <input id="cooldown" type="number" value="30" min="0">
+                </div>
+                <div style="flex:1">
+                    <label class="small">Auto copy token to clipboard</label>
+                    <select id="auto-copy">
+                        <option value="1">Yes</option>
+                        <option value="0">No</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="fine" style="margin-top:10px">Security reminder: this is client-side only. The token is safe
+                from casual inspection because it contains only a salted hash and not the plaintext answer. If you need
+                strict secrecy, use a server-side verifier or symmetric encryption with a secret key stored on the
+                server.
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="small">Made for private practice. Want a hosted version or a multi-question package? Copy this file
+            to host on GitHub Pages.
+        </div>
+    </footer>
+</div>
+
+<script>
+    // Utility functions
+    function hexFromBytes(bytes) {
+        return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function bytesFromHex(hex) {
+        if (!hex) return new Uint8Array();
+        const arr = hex.match(/.{1,2}/g).map(h => parseInt(h, 16));
+        return new Uint8Array(arr);
+    }
+
+    async function pbkdf2Hex(password, saltHex, iterations) {
+        const enc = new TextEncoder();
+        const pwKey = await crypto.subtle.importKey('raw', enc.encode(password.toLowerCase()), {name: 'PBKDF2'}, false, ['deriveBits']);
+        const salt = bytesFromHex(saltHex);
+        const bits = await crypto.subtle.deriveBits({
+            name: 'PBKDF2',
+            salt: salt,
+            iterations: iterations,
+            hash: 'SHA-256'
+        }, pwKey, 256);
+        return hexFromBytes(new Uint8Array(bits));
+    }
+
+    // Encoder logic
+    document.getElementById('btn-generate').addEventListener('click', async () => {
+        const q = document.getElementById('enc-question').value.trim();
+        const a = document.getElementById('enc-answer').value.trim();
+        const hint = document.getElementById('enc-hint').value.trim();
+        const iter = parseInt(document.getElementById('enc-iter').value || '200000', 10);
+        if (!q || !a) {
+            alert('Question and answer are required');
+            return;
+        }
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        const saltHex = hexFromBytes(salt);
+        const hashHex = await pbkdf2Hex(a, saltHex, iter);
+        const payload = {q: q, hint: hint || '', salt: saltHex, hash: hashHex, iter: iter};
+        const fmt = document.getElementById('enc-format').value;
+        const j = fmt === 'pretty' ? JSON.stringify(payload, null, 2) : JSON.stringify(payload);
+        const token = btoa(unescape(encodeURIComponent(j)));
+        document.getElementById('enc-token').value = token;
+        if (document.getElementById('auto-copy').value === '1') {
+            try {
+                await navigator.clipboard.writeText(token);
+            } catch (e) { /* ignore */
+            }
+        }
+    });
+
+    document.getElementById('btn-clear-enc').addEventListener('click', () => {
+        document.getElementById('enc-question').value = '';
+        document.getElementById('enc-answer').value = '';
+        document.getElementById('enc-hint').value = '';
+        document.getElementById('enc-token').value = '';
+    });
+
+    document.getElementById('copy-token').addEventListener('click', async () => {
+        const t = document.getElementById('enc-token').value;
+        if (!t) return alert('No token to copy');
+        try {
+            await navigator.clipboard.writeText(t);
+            alert('Token copied to clipboard');
+        } catch (e) {
+            alert('Copy failed - permission denied');
+        }
+    });
+
+    document.getElementById('download-token').addEventListener('click', () => {
+        const t = document.getElementById('enc-token').value;
+        if (!t) return alert('No token to download');
+        const blob = new Blob([t], {type: 'text/plain'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'token.txt';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    });
+
+    // Decoder logic
+    let loadedPayload = null;
+    let attempts = 0;
+    let lockedUntil = 0;
+
+    document.getElementById('btn-load').addEventListener('click', () => {
+        loadToken();
+    });
+    document.getElementById('btn-show-json').addEventListener('click', () => {
+        toggleJson();
+    });
+
+    async function loadToken() {
+        const txt = document.getElementById('dec-token').value.trim();
+        if (!txt) return alert('Paste a token first');
+        try {
+            const json = decodeURIComponent(escape(atob(txt)));
+            const obj = JSON.parse(json);
+            // basic validation
+            if (!obj.q || !obj.salt || !obj.hash) throw new Error('Missing fields');
+            loadedPayload = obj;
+            attempts = 0;
+            lockedUntil = 0;
+            document.getElementById('question-block').style.display = 'block';
+            document.getElementById('question-output').textContent = obj.q;
+            document.getElementById('token-json').textContent = JSON.stringify(obj, null, 2);
+            document.getElementById('token-json').style.display = 'none';
+            updateAttemptsLabel();
+            document.getElementById('result').textContent = '';
+            document.getElementById('dec-answer').value = '';
+        } catch (e) {
+            alert('Invalid token. Make sure it is base64 of JSON.');
+        }
+    }
+
+    function toggleJson() {
+        const el = document.getElementById('token-json');
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function updateAttemptsLabel() {
+        const max = parseInt(document.getElementById('max-attempts').value || '0', 10);
+        const left = (max === 0) ? 'Unlimited' : Math.max(0, max - attempts);
+        document.getElementById('attempts-left').textContent = left;
+    }
+
+    document.getElementById('btn-submit').addEventListener('click', async () => {
+        await submitAnswer();
+    });
+    document.getElementById('btn-hint').addEventListener('click', () => {
+        if (!loadedPayload) return alert('Load a token first');
+        const h = loadedPayload.hint || 'No hint available';
+        document.getElementById('result').textContent = 'Hint: ' + h;
+    });
+    document.getElementById('btn-reset').addEventListener('click', () => {
+        loadedPayload = null;
+        document.getElementById('question-block').style.display = 'none';
+        document.getElementById('dec-token').value = '';
+        document.getElementById('token-json').style.display = 'none';
+    });
+
+    async function submitAnswer() {
+        const now = Date.now();
+        if (lockedUntil > now) {
+            const s = Math.ceil((lockedUntil - now) / 1000);
+            alert('Locked. Wait ' + s + ' seconds.');
+            return;
+        }
+        if (!loadedPayload) return alert('Load a token first');
+        const guess = document.getElementById('dec-answer').value.trim();
+        if (!guess) return alert('Type an answer or type hint');
+        if (guess.toLowerCase() === 'hint') {
+            document.getElementById('result').textContent = 'Hint: ' + (loadedPayload.hint || 'No hint');
+            return;
+        }
+
+        attempts += 1;
+        updateAttemptsLabel();
+        const hashHex = await pbkdf2Hex(guess, loadedPayload.salt, parseInt(loadedPayload.iter || 200000, 10));
+        if (hashHex === loadedPayload.hash) {
+            document.getElementById('result').innerHTML = '<span class="status ok">Correct</span> You may proceed.';
+            // optional: lock widget to prevent further probing
+            loadedPayload = null;
+            document.getElementById('question-block').style.display = 'none';
+            return;
+        } else {
+            const max = parseInt(document.getElementById('max-attempts').value || '0', 10);
+            if (max > 0 && attempts >= max) {
+                const cd = parseInt(document.getElementById('cooldown').value || '30', 10);
+                lockedUntil = Date.now() + cd * 1000;
+                document.getElementById('result').innerHTML = '<span class="status bad">Locked</span> Too many attempts. Wait ' + cd + ' seconds.';
+            } else {
+                document.getElementById('result').innerHTML = '<span class="status bad">Wrong</span> Try again. Question shown above.';
+            }
+        }
+    }
+
+    // small helpers
+    (function attachEnter() {
+        document.getElementById('dec-answer').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitAnswer();
+            }
+        });
+        document.getElementById('enc-answer').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                e.preventDefault();
+                document.getElementById('btn-generate').click();
+            }
+        });
+    })();
+</script>
+</body>
+</html>
