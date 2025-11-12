@@ -38,15 +38,25 @@ def main():
         description="Create a base64-encoded question token (salted hash, no plaintext answer).")
     parser.add_argument('--question', '-q', help='Question text', default=None)
     parser.add_argument('--answer', '-a', help='Correct answer (will be lowercased)', default=None)
-    parser.add_argument('--hint', '-i', help='Optional hint', default="")
+    # Change default to None so we can detect when the user didn't pass --hint at all
+    parser.add_argument('--hint', '-i', help='Optional hint', default=None)
     parser.add_argument('--iter', '-n', type=int, help='PBKDF2 iterations (default 200000)', default=200_000)
     args = parser.parse_args()
+
+    # Detect interactive mode: if question or answer wasn't provided on the command line
+    interactive = (args.question is None or args.answer is None)
 
     if args.question is None:
         args.question = input("Question: ").strip()
     if args.answer is None:
         args.answer = input("Correct answer (will be lowercased and hashed): ").strip()
-    # hint already defaults to empty string
+
+    # If the user didn't pass --hint, prompt only in interactive mode. If not interactive, set to empty string.
+    if args.hint is None and interactive:
+        args.hint = input("Hint (press Enter to skip): ").strip()
+    elif args.hint is None:
+        # Non-interactive run and no hint provided: keep hint blank
+        args.hint = ""
 
     payload = make_payload(args.question, args.answer, args.hint, args.iter)
     token = encode_payload_to_b64(payload)
