@@ -289,8 +289,8 @@
 
             <div style="display:flex;gap:10px;margin-top:8px">
                 <div style="flex:1">
-                    <label class="small">PBKDF2 iterations</label>
-                    <input id="enc-iter" type="number" value="200000" min="1000" step="1000">
+                    <label class="small" for="enc-iter">PBKDF2 iterations</label>
+                    <input id="enc-iter" type="number" value="600000" min="1000" step="1000">
                 </div>
                 <div style="width:160px">
                     <label class="small">Token format</label>
@@ -318,7 +318,7 @@
                 <button class="copy" id="copy-token">Copy token</button>
                 <button class="ghost" id="download-token">Download .txt</button>
             </div>
-            <div class="madeby">Made by @kartik2005221 • <a href="https://tr.ee/ktk" target="_blank"
+            <div class="madeby">Made by @kartik2005221 • <a href="https://tr.ee/ktk" target="_blank" rel="noopener noreferrer"
                                                             style="color:var(--accent)">tr.ee/ktk</a></div>
         </section>
 
@@ -349,7 +349,7 @@
             </div>
 
             <pre id="token-json" class="output" style="display:none;max-height:220px"></pre>
-            <div class="madeby">Made by @kartik2005221 • <a href="https://tr.ee/ktk" target="_blank"
+            <div class="madeby">Made by @kartik2005221 • <a href="https://tr.ee/ktk" target="_blank" rel="noopener noreferrer"
                                                             style="color:var(--accent)">tr.ee/ktk</a></div>
         </section>
 
@@ -394,6 +394,14 @@
 </div>
 
 <script>
+    'use strict';
+    // Default PBKDF2 iteration count for NEWLY generated tokens.
+    // 600k follows current OWASP guidance for PBKDF2-HMAC-SHA256 (raised from 200k in 2026).
+    // Backward compatible by design: every token carries its own "iter" field and decoders
+    // honor it, so tokens issued before this change still verify at their original count,
+    // and old decoder versions verify new tokens correctly too. Do not remove per-token iter.
+    const DEFAULT_ITERATIONS = 600000;
+
     // Utils
     function hexFromBytes(bytes) {
         return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
@@ -411,11 +419,26 @@
         const salt = bytesFromHex(saltHex);
         const bits = await crypto.subtle.deriveBits({
             name: 'PBKDF2',
-            salt: salt,
-            iterations: iterations,
-            hash: 'SHA-256'
+            hash: 'SHA-256',
+            salt,
+            iterations
         }, pwKey, 256);
         return hexFromBytes(new Uint8Array(bits));
+    }
+
+    // UTF-8 safe base64 (replaces the deprecated escape()/unescape() trick; output is
+    // byte-identical to the previous implementation, so existing tokens are unaffected).
+    function jsonToB64(json) {
+        const bytes = new TextEncoder().encode(json);
+        let binary = '';
+        for (const b of bytes) binary += String.fromCharCode(b);
+        return btoa(binary);
+    }
+
+    function b64ToJson(b64) {
+        const raw = atob(b64.replace(/\s+/g, '')); // tolerate newlines/spaces from copy-paste
+        const bytes = Uint8Array.from(raw, c => c.charCodeAt(0));
+        return new TextDecoder().decode(bytes);
     }
 
     // Tabs
@@ -446,18 +469,19 @@
         const q = document.getElementById('enc-question').value.trim();
         const a = document.getElementById('enc-answer').value.trim();
         const hint = document.getElementById('enc-hint').value.trim();
-        const iter = parseInt(document.getElementById('enc-iter').value || '200000', 10);
+        const iter = parseInt(document.getElementById('enc-iter').value || String(DEFAULT_ITERATIONS), 10);
         if (!q || !a) {
-            alert('Question and answer are required');
+            showToast('Question and answer are required', '');
             return;
         }
+        // Fresh random salt for every token — never reused across tokens.
         const salt = crypto.getRandomValues(new Uint8Array(16));
         const saltHex = hexFromBytes(salt);
         const hashHex = await pbkdf2Hex(a, saltHex, iter);
         const payload = {q: q, hint: hint || '', salt: saltHex, hash: hashHex, iter: iter};
         const fmt = document.getElementById('enc-format').value;
         const j = fmt === 'pretty' ? JSON.stringify(payload, null, 2) : JSON.stringify(payload);
-        const token = btoa(unescape(encodeURIComponent(j)));
+        const token = jsonToB64(j);
         document.getElementById('enc-token').value = token;
         if (document.getElementById('auto-copy').value === '1') {
             try {
@@ -513,8 +537,7 @@
         const txt = document.getElementById('dec-token').value.trim();
         if (!txt) return alert('Paste a token first');
         try {
-            const json = decodeURIComponent(escape(atob(txt)));
-            const obj = JSON.parse(json);
+            const obj = JSON.parse(b64ToJson(txt));
             if (!obj.q || !obj.salt || !obj.hash) throw new Error('Missing fields');
             loadedPayload = obj;
             attempts = 0;
@@ -575,7 +598,8 @@
 
         attempts += 1;
         updateAttemptsLabel();
-        const hashHex = await pbkdf2Hex(guess, loadedPayload.salt, parseInt(loadedPayload.iter || 200000, 10));
+        // Honor the iteration count embedded in the token (older tokens use their original value).
+        const hashHex = await pbkdf2Hex(guess, loadedPayload.salt, parseInt(loadedPayload.iter || DEFAULT_ITERATIONS, 10));
         if (hashHex === loadedPayload.hash) {
             document.getElementById('result').innerHTML = '<span class="status ok">Correct</span> You may proceed.';
             showToast('Correct — well done', 'success');
