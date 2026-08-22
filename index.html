@@ -10,6 +10,9 @@
             --panel: #0b1220;
             --muted: #9aa8bf;
             --accent: #60a5fa;
+            /* Darker blue for filled buttons/tabs: white text stays >= 4.5:1 across
+               the whole gradient (light #60a5fa fails AA under white text). */
+            --accent-strong: #2563eb;
             --accent-2: #7c3aed;
             --glass: rgba(255, 255, 255, 0.03);
             --success: #10b981;
@@ -22,6 +25,12 @@
 
         * {
             box-sizing: border-box
+        }
+
+        /* Visible keyboard focus everywhere */
+        :focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px
         }
 
         html, body {
@@ -76,7 +85,7 @@
         }
 
         .tab.active {
-            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            background: linear-gradient(90deg, var(--accent-strong), var(--accent-2));
             color: white;
             font-weight: 700
         }
@@ -113,8 +122,12 @@
             border-radius: 8px;
             border: 1px solid rgba(255, 255, 255, 0.04);
             background: var(--glass);
-            color: #e6eef8;
-            outline: none
+            color: #e6eef8
+        }
+
+        ::placeholder {
+            color: #7f92ad;
+            opacity: 1
         }
 
         textarea {
@@ -140,13 +153,15 @@
         }
 
         button {
-            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            background: linear-gradient(90deg, var(--accent-strong), var(--accent-2));
             border: none;
             padding: 10px 12px;
             border-radius: 10px;
             color: white;
             cursor: pointer;
-            font-weight: 600
+            font-weight: 600;
+            font-family: inherit;
+            font-size: inherit
         }
 
         button.ghost {
@@ -270,13 +285,15 @@
         </div>
     </header>
 
-    <div class="tabs" role="tablist">
-        <div class="tab active" id="tab-enc" role="tab" aria-selected="true">Encoder</div>
-        <div class="tab" id="tab-dec" role="tab" aria-selected="false">Decoder</div>
+    <div class="tabs" role="tablist" aria-label="Mode">
+        <button type="button" class="tab active" id="tab-enc" role="tab" aria-selected="true"
+                aria-controls="panel-enc">Encoder</button>
+        <button type="button" class="tab" id="tab-dec" role="tab" aria-selected="false"
+                aria-controls="panel-dec" tabindex="-1">Decoder</button>
     </div>
 
     <div class="grid">
-        <section class="card" id="panel-enc">
+        <section class="card" id="panel-enc" role="tabpanel" aria-labelledby="tab-enc" tabindex="0">
             <h2>Encoder</h2>
             <label for="enc-question">Question</label>
             <textarea id="enc-question" placeholder="Write the question here"></textarea>
@@ -293,7 +310,7 @@
                     <input id="enc-iter" type="number" value="600000" min="1000" step="1000">
                 </div>
                 <div style="width:160px">
-                    <label class="small">Token format</label>
+                    <label class="small" for="enc-format">Token format</label>
                     <select id="enc-format">
                         <option value="compact">Compact JSON (base64)</option>
                         <option value="pretty">Pretty JSON inside base64</option>
@@ -310,7 +327,7 @@
                 contain the plaintext answer.
             </div>
 
-            <label style="margin-top:12px">Token</label>
+            <label style="margin-top:12px" for="enc-token">Token</label>
             <div class="row">
                 <textarea id="enc-token" readonly placeholder="Generated token will appear here"></textarea>
             </div>
@@ -322,7 +339,7 @@
                                                             style="color:var(--accent)">tr.ee/ktk</a></div>
         </section>
 
-        <section class="card" id="panel-dec" style="display:none">
+        <section class="card" id="panel-dec" role="tabpanel" aria-labelledby="tab-dec" tabindex="0" hidden>
             <h2>Decoder</h2>
             <label for="dec-token">Paste Base64 token</label>
             <textarea id="dec-token" placeholder="Paste token here"></textarea>
@@ -337,7 +354,7 @@
                 <div class="badge">Question</div>
                 <div class="output" id="question-output"></div>
 
-                <label style="margin-top:10px">Your answer</label>
+                <label style="margin-top:10px" for="dec-answer">Your answer</label>
                 <input id="dec-answer" type="text" placeholder="Type your answer here">
                 <div style="display:flex;gap:8px;margin-top:8px">
                     <button id="btn-submit">Submit</button>
@@ -345,7 +362,7 @@
                     <button class="ghost" id="btn-reset">Reset</button>
                 </div>
 
-                <div id="result" class="fine" style="margin-top:10px"></div>
+                <div id="result" class="fine" style="margin-top:10px" role="status" aria-live="polite"></div>
             </div>
 
             <pre id="token-json" class="output" style="display:none;max-height:220px"></pre>
@@ -357,15 +374,15 @@
             <h2>Options & Notes</h2>
             <div class="row" style="gap:16px">
                 <div style="flex:1">
-                    <label class="small">Max attempts (0 = unlimited)</label>
+                    <label class="small" for="max-attempts">Max attempts (0 = unlimited)</label>
                     <input id="max-attempts" type="number" value="0" min="0">
                 </div>
                 <div style="flex:1">
-                    <label class="small">Cooldown after lockout (seconds)</label>
+                    <label class="small" for="cooldown">Cooldown after lockout (seconds)</label>
                     <input id="cooldown" type="number" value="30" min="0">
                 </div>
                 <div style="flex:1">
-                    <label class="small">Auto copy token to clipboard</label>
+                    <label class="small" for="auto-copy">Auto copy token to clipboard</label>
                     <select id="auto-copy">
                         <option value="1">Yes</option>
                         <option value="0">No</option>
@@ -441,28 +458,40 @@
         return new TextDecoder().decode(bytes);
     }
 
-    // Tabs
+    // Tabs (ARIA tabs pattern: roving tabindex + arrow/Home/End keys)
     const tabEnc = document.getElementById('tab-enc');
     const tabDec = document.getElementById('tab-dec');
     const panelEnc = document.getElementById('panel-enc');
     const panelDec = document.getElementById('panel-dec');
+    const tabs = [tabEnc, tabDec];
 
     function activateTab(which) {
-        if (which === 'enc') {
-            tabEnc.classList.add('active');
-            tabDec.classList.remove('active');
-            panelEnc.style.display = 'block';
-            panelDec.style.display = 'none';
-        } else {
-            tabDec.classList.add('active');
-            tabEnc.classList.remove('active');
-            panelDec.style.display = 'block';
-            panelEnc.style.display = 'none';
-        }
+        const isEnc = which === 'enc';
+        tabEnc.classList.toggle('active', isEnc);
+        tabDec.classList.toggle('active', !isEnc);
+        tabEnc.setAttribute('aria-selected', String(isEnc));
+        tabDec.setAttribute('aria-selected', String(!isEnc));
+        tabEnc.tabIndex = isEnc ? 0 : -1;
+        tabDec.tabIndex = isEnc ? -1 : 0;
+        panelEnc.hidden = !isEnc;
+        panelDec.hidden = isEnc;
     }
 
     tabEnc.addEventListener('click', () => activateTab('enc'));
     tabDec.addEventListener('click', () => activateTab('dec'));
+
+    document.querySelector('.tabs').addEventListener('keydown', (e) => {
+        const current = tabs.findIndex(t => t.getAttribute('aria-selected') === 'true');
+        let next = null;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = tabs[(current + 1) % tabs.length];
+        else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = tabs[(current - 1 + tabs.length) % tabs.length];
+        else if (e.key === 'Home') next = tabs[0];
+        else if (e.key === 'End') next = tabs[tabs.length - 1];
+        if (!next) return;
+        e.preventDefault();
+        activateTab(next === tabEnc ? 'enc' : 'dec');
+        next.focus();
+    });
 
     // Encoder logic
     document.getElementById('btn-generate').addEventListener('click', async () => {
