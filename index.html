@@ -190,6 +190,11 @@
             border: 1px solid rgba(255, 255, 255, 0.04)
         }
 
+        button:disabled {
+            opacity: 0.6;
+            cursor: progress
+        }
+
         button.copy {
             background: linear-gradient(90deg, #334155, #1e293b);
             padding: 8px 10px
@@ -461,8 +466,8 @@
 </div>
 
 <div id="toast" class="toast hide" role="status" aria-live="polite">
-    <div class="title">Congrats</div>
-    <div class="msg">Correct answer — well done.</div>
+    <div class="title">Notice</div>
+    <div class="msg"></div>
 </div>
 
 <script>
@@ -548,30 +553,64 @@
         next.focus();
     });
 
+    // Clipboard helper with graceful fallback (e.g. non-secure contexts)
+    async function copyText(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+            return true;
+        } catch (e) {
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                const ok = document.execCommand('copy');
+                ta.remove();
+                return ok;
+            } catch (e2) {
+                return false;
+            }
+        }
+    }
+
     // Encoder logic
-    document.getElementById('btn-generate').addEventListener('click', async () => {
+    const btnGenerate = document.getElementById('btn-generate');
+
+    btnGenerate.addEventListener('click', async () => {
         const q = document.getElementById('enc-question').value.trim();
         const a = document.getElementById('enc-answer').value.trim();
         const hint = document.getElementById('enc-hint').value.trim();
         const iter = parseInt(document.getElementById('enc-iter').value || String(DEFAULT_ITERATIONS), 10);
         if (!q || !a) {
-            showToast('Question and answer are required', '');
+            showToast('Question and answer are required', 'error');
             return;
         }
-        // Fresh random salt for every token — never reused across tokens.
-        const salt = crypto.getRandomValues(new Uint8Array(16));
-        const saltHex = hexFromBytes(salt);
-        const hashHex = await pbkdf2Hex(a, saltHex, iter);
-        const payload = {q: q, hint: hint || '', salt: saltHex, hash: hashHex, iter: iter};
-        const fmt = document.getElementById('enc-format').value;
-        const j = fmt === 'pretty' ? JSON.stringify(payload, null, 2) : JSON.stringify(payload);
-        const token = jsonToB64(j);
-        document.getElementById('enc-token').value = token;
-        if (document.getElementById('auto-copy').value === '1') {
-            try {
-                await navigator.clipboard.writeText(token);
-            } catch (e) {
+        btnGenerate.disabled = true;
+        btnGenerate.textContent = 'Generating…';
+        try {
+            // Fresh random salt for every token — never reused across tokens.
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            const saltHex = hexFromBytes(salt);
+            const hashHex = await pbkdf2Hex(a, saltHex, iter);
+            const payload = {q: q, hint: hint || '', salt: saltHex, hash: hashHex, iter: iter};
+            const fmt = document.getElementById('enc-format').value;
+            const j = fmt === 'pretty' ? JSON.stringify(payload, null, 2) : JSON.stringify(payload);
+            const token = jsonToB64(j);
+            document.getElementById('enc-token').value = token;
+            showToast('Token generated', 'success');
+            if (document.getElementById('auto-copy').value === '1') {
+                const ok = await copyText(token);
+                showToast(ok ? 'Token copied to clipboard' : 'Auto-copy failed — copy it manually',
+                    ok ? 'success' : 'error');
             }
+        } catch (err) {
+            showToast('Could not generate token — Web Crypto unavailable in this browser', 'error');
+        } finally {
+            btnGenerate.disabled = false;
+            btnGenerate.textContent = 'Generate Token';
         }
     });
 
@@ -582,27 +621,40 @@
         document.getElementById('enc-token').value = '';
     });
 
-    document.getElementById('copy-token').addEventListener('click', async () => {
+    const copyBtn = document.getElementById('copy-token');
+    copyBtn.addEventListener('click', async () => {
         const t = document.getElementById('enc-token').value;
-        if (!t) return alert('No token to copy');
-        try {
-            await navigator.clipboard.writeText(t);
-            alert('Token copied to clipboard');
-        } catch (e) {
-            alert('Copy failed - permission denied');
+        if (!t) {
+            showToast('Nothing to copy yet — generate a token first', 'error');
+            return;
+        }
+        const ok = await copyText(t);
+        showToast(ok ? 'Token copied to clipboard' : 'Copy failed — select the token and copy manually',
+            ok ? 'success' : 'error');
+        if (ok) {
+            copyBtn.textContent = 'Copied ✓';
+            setTimeout(() => {
+                copyBtn.textContent = 'Copy token';
+            }, 1600);
         }
     });
 
     document.getElementById('download-token').addEventListener('click', () => {
         const t = document.getElementById('enc-token').value;
-        if (!t) return alert('No token to download');
+        if (!t) {
+            showToast('Nothing to download yet — generate a token first', 'error');
+            return;
+        }
         const blob = new Blob([t], {type: 'text/plain'});
+        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
+        a.href = url;
         a.download = 'token.txt';
         document.body.appendChild(a);
         a.click();
         a.remove();
+        URL.revokeObjectURL(url);
+        showToast('Saved token.txt', 'success');
     });
 
     // Decoder logic
@@ -619,7 +671,10 @@
 
     async function loadToken() {
         const txt = document.getElementById('dec-token').value.trim();
-        if (!txt) return alert('Paste a token first');
+        if (!txt) {
+            showToast('Paste a token first', 'error');
+            return;
+        }
         try {
             const obj = JSON.parse(b64ToJson(txt));
             if (!obj.q || !obj.salt || !obj.hash) throw new Error('Missing fields');
@@ -635,7 +690,7 @@
             document.getElementById('dec-answer').value = '';
             activateTab('dec');
         } catch (e) {
-            alert('Invalid token. Make sure it is base64 of JSON.');
+            showToast('Invalid token — make sure it is base64 of JSON', 'error');
         }
     }
 
@@ -654,7 +709,10 @@
         await submitAnswer();
     });
     document.getElementById('btn-hint').addEventListener('click', () => {
-        if (!loadedPayload) return alert('Load a token first');
+        if (!loadedPayload) {
+            showToast('Load a token first', 'error');
+            return;
+        }
         const h = loadedPayload.hint || 'No hint available';
         document.getElementById('result').textContent = 'Hint: ' + h;
     });
@@ -669,12 +727,25 @@
         const now = Date.now();
         if (lockedUntil > now) {
             const s = Math.ceil((lockedUntil - now) / 1000);
-            alert('Locked. Wait ' + s + ' seconds.');
+            showToast('Locked — wait ' + s + ' more seconds', 'error');
             return;
         }
-        if (!loadedPayload) return alert('Load a token first');
+        // Cooldown has lapsed: give the user a fresh set of attempts
+        if (lockedUntil !== 0 && lockedUntil <= now) {
+            attempts = 0;
+            lockedUntil = 0;
+            updateAttemptsLabel();
+            document.getElementById('result').textContent = '';
+        }
+        if (!loadedPayload) {
+            showToast('Load a token first', 'error');
+            return;
+        }
         const guess = document.getElementById('dec-answer').value.trim();
-        if (!guess) return alert('Type an answer or type hint');
+        if (!guess) {
+            showToast('Type an answer (or "hint")', 'error');
+            return;
+        }
         if (guess.toLowerCase() === 'hint') {
             document.getElementById('result').textContent = 'Hint: ' + (loadedPayload.hint || 'No hint');
             return;
@@ -686,12 +757,10 @@
         const hashHex = await pbkdf2Hex(guess, loadedPayload.salt, parseInt(loadedPayload.iter || DEFAULT_ITERATIONS, 10));
         if (hashHex === loadedPayload.hash) {
             document.getElementById('result').innerHTML = '<span class="status ok">Correct</span> You may proceed.';
-            showToast('Correct — well done', 'success');
-            // clear to prevent further probing
+            showToast('Correct answer — well done.', 'success');
+            // clear to prevent further probing; keep the success state visible
+            // (no forced tab switch — the user stays where they are)
             loadedPayload = null;
-            document.getElementById('question-block').style.display = 'none';
-            // switch to encoder tab after a moment
-            setTimeout(() => activateTab('enc'), 800);
             return;
         } else {
             const max = parseInt(document.getElementById('max-attempts').value || '0', 10);
@@ -699,7 +768,7 @@
                 const cd = parseInt(document.getElementById('cooldown').value || '30', 10);
                 lockedUntil = Date.now() + cd * 1000;
                 document.getElementById('result').innerHTML = '<span class="status bad">Locked</span> Too many attempts. Wait ' + cd + ' seconds.';
-                showToast('Locked due to too many attempts', '');
+                showToast('Locked due to too many attempts', 'error');
             } else {
                 // show red wrong indicator
                 document.getElementById('result').innerHTML = '<span class="status bad">Wrong</span> Try again. Question shown above.';
@@ -714,6 +783,8 @@
     function showToast(message, kind) {
         toastEl.classList.remove('hide');
         toastEl.querySelector('.msg').textContent = message;
+        const titles = {success: 'Success', error: 'Heads up'};
+        toastEl.querySelector('.title').textContent = titles[kind] || 'Notice';
         toastEl.classList.toggle('success', kind === 'success');
         if (toastTimer) clearTimeout(toastTimer);
         toastTimer = setTimeout(() => {
@@ -723,13 +794,13 @@
 
     // keyboard
     (function attachEnter() {
-        document.getElementById('dec-answer').addEventListener('keypress', function (e) {
+        document.getElementById('dec-answer').addEventListener('keydown', function (e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 submitAnswer();
             }
         });
-        document.getElementById('enc-answer').addEventListener('keypress', function (e) {
+        document.getElementById('enc-answer').addEventListener('keydown', function (e) {
             if (e.key === 'Enter' && e.ctrlKey) {
                 e.preventDefault();
                 document.getElementById('btn-generate').click();
