@@ -8,20 +8,18 @@
     <title>Answer Verifier - Encoder + Decoder</title>
     <style>
         :root {
-            --bg: #071326;
-            --panel: #0b1220;
-            --muted: #9aa8bf;
-            --accent: #60a5fa;
-            /* Darker blue for filled buttons/tabs: white text stays >= 4.5:1 across
-               the whole gradient (light #60a5fa fails AA under white text). */
-            --accent-strong: #2563eb;
-            --accent-2: #7c3aed;
-            --glass: rgba(255, 255, 255, 0.03);
-            --success: #10b981;
-            --danger: #ef4444;
-            --surface: #071326;
-            --card: #0f1724;
-            --toast-bg: rgba(8, 12, 20, 0.85);
+            /* Palette: #222831 / #393E46 / #00ADB5 / #EEEEEE */
+            --bg: #222831;
+            --panel: #393E46;
+            --inset: #1b2129;
+            --text: #EEEEEE;
+            --muted: #b2babb;
+            --accent: #00ADB5;
+            --on-accent: #222831; /* teal fills carry dark text: white on #00ADB5 fails AA */
+            --border: rgba(238, 238, 238, 0.09);
+            --success: #34d399;
+            --danger: #fca5a5;
+            --toast-bg: rgba(57, 62, 70, 0.97);
             font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
         }
 
@@ -35,11 +33,16 @@
             outline-offset: 2px
         }
 
+        ::selection {
+            background: var(--accent);
+            color: var(--on-accent)
+        }
+
         html, body {
             height: 100%;
             margin: 0;
-            background: linear-gradient(180deg, var(--bg) 0%, #02101a 70%);
-            color: #e6eef8
+            background: var(--bg);
+            color: var(--text)
         }
 
         .wrap {
@@ -52,17 +55,23 @@
             display: flex;
             align-items: center;
             gap: 16px;
-            margin-bottom: 12px
+            margin-bottom: 14px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border)
         }
 
         header h1 {
             margin: 0;
-            font-size: 20px;
+            font-size: 21px;
             letter-spacing: 0.4px
         }
 
+        header h1 span {
+            color: var(--accent)
+        }
+
         header p {
-            margin: 0;
+            margin: 4px 0 0;
             color: var(--muted);
             font-size: 13px
         }
@@ -71,9 +80,6 @@
         .tabs {
             display: flex;
             gap: 8px;
-            background: transparent;
-            border-radius: 12px;
-            overflow: hidden;
             margin-bottom: 18px
         }
 
@@ -83,12 +89,17 @@
             background: transparent;
             color: var(--muted);
             cursor: pointer;
-            border: 1px solid rgba(255, 255, 255, 0.03)
+            border: none;
+            transition: color 0.15s ease
+        }
+
+        .tab:hover {
+            color: var(--text)
         }
 
         .tab.active {
-            background: linear-gradient(90deg, var(--accent-strong), var(--accent-2));
-            color: white;
+            background: var(--accent);
+            color: var(--on-accent);
             font-weight: 700
         }
 
@@ -99,11 +110,11 @@
         }
 
         .card {
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+            background: var(--panel);
             border-radius: 12px;
             padding: 18px;
-            box-shadow: 0 6px 20px rgba(2, 6, 23, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.02)
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border)
         }
 
         .card h2 {
@@ -122,13 +133,17 @@
             width: 100%;
             padding: 10px;
             border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            background: var(--glass);
-            color: #e6eef8
+            border: 1px solid var(--border);
+            background: var(--inset);
+            color: var(--text)
+        }
+
+        select {
+            appearance: auto
         }
 
         ::placeholder {
-            color: #7f92ad;
+            color: #8a939b;
             opacity: 1
         }
 
@@ -176,20 +191,30 @@
         }
 
         button {
-            background: linear-gradient(90deg, var(--accent-strong), var(--accent-2));
+            background: var(--accent);
+            color: var(--on-accent);
             border: none;
-            padding: 10px 12px;
+            padding: 10px 14px;
             border-radius: 10px;
-            color: white;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 700;
             font-family: inherit;
-            font-size: inherit
+            font-size: inherit;
+            transition: filter 0.15s ease
+        }
+
+        button:hover {
+            filter: brightness(1.12)
         }
 
         button.ghost {
             background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.04)
+            color: var(--text);
+            border: 1px solid var(--border)
+        }
+
+        button.ghost:hover {
+            border-color: var(--accent)
         }
 
         button:disabled {
@@ -198,17 +223,20 @@
         }
 
         button.copy {
-            background: linear-gradient(90deg, #334155, #1e293b);
+            background: var(--inset);
+            color: var(--text);
+            border: 1px solid var(--border);
             padding: 8px 10px
         }
 
         .output {
             margin-top: 12px;
-            background: rgba(2, 6, 23, 0.6);
+            background: var(--inset);
+            border: 1px solid var(--border);
             padding: 12px;
             border-radius: 10px;
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
-            color: #dbeafe;
+            color: var(--text);
             overflow: auto
         }
 
@@ -271,12 +299,12 @@
 
         .badge {
             display: inline-block;
-            padding: 6px 8px;
+            padding: 6px 10px;
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(0, 173, 181, 0.14);
             font-size: 12px;
-            color: var(--muted);
-            border: 1px solid rgba(255, 255, 255, 0.02)
+            color: var(--accent);
+            border: 1px solid rgba(0, 173, 181, 0.35)
         }
 
         .status {
@@ -287,15 +315,15 @@
         }
 
         .ok {
-            background: rgba(16, 185, 129, 0.12);
+            background: rgba(52, 211, 153, 0.14);
             color: var(--success);
-            border: 1px solid rgba(16, 185, 129, 0.06)
+            border: 1px solid rgba(52, 211, 153, 0.3)
         }
 
         .bad {
-            background: rgba(239, 68, 68, 0.08);
+            background: rgba(252, 165, 165, 0.12);
             color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, 0.06)
+            border: 1px solid rgba(252, 165, 165, 0.3)
         }
 
         /* toast */
@@ -306,21 +334,26 @@
             background: var(--toast-bg);
             padding: 12px 16px;
             border-radius: 10px;
-            color: #dffcf0;
-            box-shadow: 0 6px 20px rgba(2, 6, 23, 0.6);
+            color: var(--text);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
             z-index: 999;
             display: flex;
             align-items: center;
             gap: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.04)
+            border: 1px solid var(--border)
         }
 
         .toast .title {
-            font-weight: 800
+            font-weight: 800;
+            color: var(--accent)
         }
 
         .toast.success {
             border-left: 6px solid var(--success)
+        }
+
+        .toast.error {
+            border-left: 6px solid var(--danger)
         }
 
         .toast.hide {
@@ -339,7 +372,7 @@
 <div class="wrap">
     <header>
         <div>
-            <h1>Answer Verifier</h1>
+            <h1>Answer <span>Verifier</span></h1>
             <p>Encoder + Decoder in one file — client-side, PBKDF2-SHA256.</p>
         </div>
         <div style="margin-left:auto;text-align:right">
@@ -407,7 +440,8 @@
             <textarea id="dec-token" placeholder="Paste token here"></textarea>
 
             <div class="row" style="margin-top:8px">
-                <button id="btn-load">Load token</button>
+                <button id="btn-load" title="Loads the token in the box — or straight from your clipboard if the box is empty">Load
+                    token</button>
                 <button class="ghost" id="btn-show-json">Show token JSON</button>
                 <div style="margin-left:auto" class="small">Attempts: <span id="attempts-left">Unlimited</span></div>
             </div>
@@ -665,7 +699,23 @@
     let attempts = 0;
     let lockedUntil = 0;
 
-    document.getElementById('btn-load').addEventListener('click', () => {
+    // Convenience: if the box is empty, try to pull the token straight from the clipboard
+    document.getElementById('btn-load').addEventListener('click', async () => {
+        const field = document.getElementById('dec-token');
+        if (!field.value.trim()) {
+            let clip = null;
+            try {
+                clip = await navigator.clipboard.readText();
+            } catch (e) {
+                /* clipboard read unavailable/denied */
+            }
+            if (!clip || !clip.trim()) {
+                showToast('Paste a token first (clipboard access was not granted)', 'error');
+                return;
+            }
+            field.value = clip.trim();
+            showToast('Pasted token from clipboard', 'success');
+        }
         loadToken();
     });
     document.getElementById('btn-show-json').addEventListener('click', () => {
@@ -692,6 +742,8 @@
             document.getElementById('result').textContent = '';
             document.getElementById('dec-answer').value = '';
             activateTab('dec');
+            // Convenience: jump straight to typing the answer
+            document.getElementById('dec-answer').focus();
         } catch (e) {
             showToast('Invalid token — make sure it is base64 of JSON', 'error');
         }
@@ -789,6 +841,7 @@
         const titles = {success: 'Success', error: 'Heads up'};
         toastEl.querySelector('.title').textContent = titles[kind] || 'Notice';
         toastEl.classList.toggle('success', kind === 'success');
+        toastEl.classList.toggle('error', kind === 'error');
         if (toastTimer) clearTimeout(toastTimer);
         toastTimer = setTimeout(() => {
             toastEl.classList.add('hide');
@@ -811,7 +864,36 @@
         });
     })();
 
+    // Settings persistence — remembers tool settings between visits.
+    // Deliberately does NOT persist question/answer text (secrets don't belong in localStorage).
+    const SETTING_IDS = ['enc-iter', 'max-attempts', 'cooldown', 'auto-copy'];
+
+    function saveSettings() {
+        const s = {};
+        for (const id of SETTING_IDS) s[id] = document.getElementById(id).value;
+        try {
+            localStorage.setItem('av-settings', JSON.stringify(s));
+        } catch (e) {
+            /* storage unavailable — settings just won't persist */
+        }
+    }
+
+    function loadSettings() {
+        let s;
+        try {
+            s = JSON.parse(localStorage.getItem('av-settings') || '{}');
+        } catch (e) {
+            return;
+        }
+        for (const id of SETTING_IDS) {
+            if (s[id] !== undefined) document.getElementById(id).value = s[id];
+        }
+    }
+
+    SETTING_IDS.forEach(id => document.getElementById(id).addEventListener('change', saveSettings));
+
     // init
+    loadSettings();
     activateTab('enc');
 </script>
 </body>
