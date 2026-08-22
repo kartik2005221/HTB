@@ -176,6 +176,10 @@
             margin-top: 8px
         }
 
+        .field-combined {
+            width: 230px
+        }
+
         .grow {
             flex: 1
         }
@@ -287,8 +291,54 @@
                 flex-direction: column
             }
 
-            .field-format {
+            .field-format,
+            .field-combined {
                 width: 100%
+            }
+
+            .checkline {
+                margin-top: 0;
+                white-space: normal
+            }
+
+            /* batch rows reflow to a compact stack */
+            .batch-row {
+                grid-template-columns: 26px 1fr 30px;
+                grid-template-areas:
+                    "num label del"
+                    "q    q     q"
+                    "a    hint  hint";
+                row-gap: 4px
+            }
+
+            .batch-row .row-num {
+                grid-area: num
+            }
+
+            .batch-row .br-label {
+                grid-area: label
+            }
+
+            .batch-row .br-del {
+                grid-area: del
+            }
+
+            .batch-row .br-q {
+                grid-area: q
+            }
+
+            .batch-row .br-a {
+                grid-area: a
+            }
+
+            .batch-row .br-hint {
+                grid-area: hint
+            }
+
+            .paste-btn {
+                top: auto !important;
+                bottom: 6px;
+                transform: none !important
             }
 
             .toast {
@@ -366,6 +416,228 @@
             margin-top: 10px
         }
 
+        /* ---- motion (minimal, tasteful) ---- */
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(8px)
+            }
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px)
+            }
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        .card {
+            animation: fadeUp 0.3s ease both
+        }
+
+        .grid .card:nth-child(2) {
+            animation-delay: 0.05s
+        }
+
+        .grid .card:nth-child(3) {
+            animation-delay: 0.1s
+        }
+
+        button, .tab {
+            transition: filter 0.15s ease, transform 0.05s ease, border-color 0.15s ease, color 0.15s ease
+        }
+
+        button:active {
+            transform: scale(0.97)
+        }
+
+        .toast:not(.hide) {
+            animation: toastIn 0.22s ease
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important
+            }
+        }
+
+        /* ---- text fields with paste buttons ---- */
+        .field {
+            position: relative;
+            margin-bottom: 10px
+        }
+
+        .field.has-paste input, .field.has-paste textarea {
+            padding-right: 46px
+        }
+
+        .paste-btn {
+            position: absolute;
+            top: 29px; /* below the label line */
+            right: 6px;
+            padding: 5px 7px;
+            border-radius: 7px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center
+        }
+
+        .paste-btn:hover {
+            color: var(--accent);
+            border-color: var(--accent)
+        }
+
+        .field > input + .paste-btn, .field > .paste-btn:only-child {
+            top: 50%;
+            transform: translateY(calc(-50% - 8px)) /* center on the control, offset for label */
+        }
+
+        /* ---- segmented control (Single / Batch) ---- */
+        .seg {
+            display: inline-flex;
+            gap: 4px;
+            background: var(--inset);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 4px;
+            margin-bottom: 14px
+        }
+
+        .seg-btn {
+            background: transparent;
+            color: var(--muted);
+            border: none;
+            border-radius: 7px;
+            padding: 7px 16px;
+            font-weight: 600
+        }
+
+        .seg-btn.active {
+            background: var(--accent);
+            color: var(--on-accent)
+        }
+
+        /* ---- batch rows ---- */
+        .batch-row {
+            display: grid;
+            grid-template-columns: 26px minmax(90px, 0.6fr) 1.6fr 1fr 1fr 30px;
+            gap: 6px;
+            align-items: center;
+            margin-bottom: 6px;
+            animation: fadeUp 0.2s ease both
+        }
+
+        .batch-row .row-num {
+            font-size: 12px;
+            color: var(--muted);
+            text-align: right
+        }
+
+        .batch-row input {
+            padding: 8px
+        }
+
+        .br-del {
+            padding: 6px 8px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--danger);
+            font-weight: 700
+        }
+
+        .br-del:hover {
+            border-color: var(--danger)
+        }
+
+        /* ---- output actions row ---- */
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+            align-items: center
+        }
+
+        .actions .sep {
+            width: 1px;
+            height: 22px;
+            background: var(--border);
+            margin: 0 2px
+        }
+
+        .checkline {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 22px;
+            white-space: nowrap
+        }
+
+        .checkline input[type="checkbox"] {
+            width: auto;
+            accent-color: var(--accent)
+        }
+
+        /* ---- batch session ---- */
+        .progress {
+            height: 6px;
+            background: var(--inset);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            overflow: hidden;
+            margin-top: 8px
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0;
+            background: var(--accent);
+            transition: width 0.3s ease
+        }
+
+        .summary-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px
+        }
+
+        .chip {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            border: 1px solid var(--border);
+            color: var(--muted)
+        }
+
+        .chip.ok {
+            color: var(--success);
+            border-color: rgba(52, 211, 153, 0.4)
+        }
+
+        .chip.bad {
+            color: var(--danger);
+            border-color: rgba(252, 165, 165, 0.4)
+        }
+
+        .chip.skip {
+            opacity: 0.75
+        }
+
     </style>
 </head>
 <body>
@@ -390,14 +662,55 @@
     <div class="grid">
         <section class="card" id="panel-enc" role="tabpanel" aria-labelledby="tab-enc" tabindex="0">
             <h2>Encoder</h2>
-            <label for="enc-question">Question</label>
-            <textarea id="enc-question" placeholder="Write the question here"></textarea>
 
-            <label for="enc-answer">Answer (will be lowercased)</label>
-            <input id="enc-answer" type="text" placeholder="Correct answer">
+            <div class="seg" role="group" aria-label="Encoder mode">
+                <button type="button" id="mode-single" class="seg-btn active" aria-pressed="true">Single</button>
+                <button type="button" id="mode-batch" class="seg-btn" aria-pressed="false">Batch</button>
+            </div>
 
-            <label for="enc-hint">Hint (optional)</label>
-            <input id="enc-hint" type="text" placeholder="Small hint for the user">
+            <div id="single-editor">
+                <div class="field has-paste">
+                    <label for="enc-question">Question</label>
+                    <textarea id="enc-question" placeholder="Write the question here"></textarea>
+                </div>
+
+                <div class="field has-paste">
+                    <label for="enc-answer">Answer (will be lowercased)</label>
+                    <input id="enc-answer" type="text" placeholder="Correct answer">
+                </div>
+
+                <div class="field has-paste">
+                    <label for="enc-hint">Hint (optional)</label>
+                    <input id="enc-hint" type="text" placeholder="Small hint for the user">
+                </div>
+            </div>
+
+            <div id="batch-editor" hidden>
+                <div class="field">
+                    <label class="small" for="batch-title">Set name (optional)</label>
+                    <input id="batch-title" type="text" placeholder="e.g. HTB Week 3 — Recon">
+                </div>
+
+                <div id="batch-rows"></div>
+
+                <div class="controls">
+                    <button type="button" class="ghost" id="btn-add-row">+ Add question</button>
+                    <button type="button" class="ghost" id="btn-bulk-toggle">Bulk paste lines</button>
+                </div>
+
+                <div id="bulk-wrap" hidden>
+                    <label class="small" for="bulk-input">One per line — <code>question | answer | hint | label</code>
+                        (hint and label optional)
+                    </label>
+                    <div class="field has-paste">
+                        <textarea id="bulk-input"
+                                  placeholder="What does SMB stand for? | server message block | three words&#10;Default SSH port? | 22 | encrypted shell | Q2"></textarea>
+                    </div>
+                    <button type="button" class="ghost" id="btn-bulk-parse">Parse lines → questions</button>
+                </div>
+
+                <p class="fine" id="batch-count" role="status">0 questions ready</p>
+            </div>
 
             <div class="enc-options">
                 <div class="grow">
@@ -411,6 +724,10 @@
                         <option value="pretty">Pretty JSON inside base64</option>
                     </select>
                 </div>
+                <div class="field-combined">
+                    <label class="small checkline"><input type="checkbox" id="batch-combined" checked>
+                        Combine into one batch token</label>
+                </div>
             </div>
 
             <div class="controls">
@@ -418,17 +735,24 @@
                 <button class="ghost" id="btn-clear-enc">Clear</button>
             </div>
 
-            <div class="fine">Generated token contains question, hint, salt, hash and iteration count only. It does not
-                contain the plaintext answer.
+            <div class="fine">Tokens contain question, hint, salt, hash and iteration count only — never the plaintext
+                answer.
             </div>
 
-            <label style="margin-top:12px" for="enc-token">Token</label>
+            <label style="margin-top:12px" for="enc-token">Token output</label>
             <div class="row">
-                <textarea id="enc-token" readonly placeholder="Generated token will appear here"></textarea>
+                <textarea id="enc-token" readonly placeholder="Generated token(s) will appear here"></textarea>
             </div>
-            <div style="display:flex;gap:8px;margin-top:8px">
-                <button class="copy" id="copy-token">Copy token</button>
-                <button class="ghost" id="download-token">Download .txt</button>
+
+            <div class="actions">
+                <button class="copy" id="copy-token">Copy</button>
+                <button class="ghost" id="download-token">Save .txt</button>
+                <button class="ghost" id="save-json">Save .json</button>
+                <span class="sep" aria-hidden="true"></span>
+                <button class="ghost" id="share-native" title="Open your device's share sheet">Share…</button>
+                <button class="ghost" id="share-wa" title="Open WhatsApp with the token pre-filled">WhatsApp</button>
+                <button class="ghost" id="share-tg" title="Open Telegram with the token pre-filled">Telegram</button>
+                <button class="ghost" id="share-mail" title="Open your email client with the token pre-filled">Email</button>
             </div>
             <div class="madeby">Made by @kartik2005221 • <a href="https://tr.ee/ktk" target="_blank" rel="noopener noreferrer"
                                                             style="color:var(--accent)">tr.ee/ktk</a></div>
@@ -436,8 +760,11 @@
 
         <section class="card" id="panel-dec" role="tabpanel" aria-labelledby="tab-dec" tabindex="0" hidden>
             <h2>Decoder</h2>
-            <label for="dec-token">Paste Base64 token</label>
-            <textarea id="dec-token" placeholder="Paste token here"></textarea>
+
+            <div class="field has-paste">
+                <label for="dec-token">Paste Base64 token</label>
+                <textarea id="dec-token" placeholder="Paste token here"></textarea>
+            </div>
 
             <div class="row" style="margin-top:8px">
                 <button id="btn-load" title="Loads the token in the box — or straight from your clipboard if the box is empty">Load
@@ -446,6 +773,7 @@
                 <div style="margin-left:auto" class="small">Attempts: <span id="attempts-left">Unlimited</span></div>
             </div>
 
+            <!-- single-question flow (v1 tokens) -->
             <div id="question-block" style="display:none;margin-top:12px">
                 <div class="badge">Question</div>
                 <div class="output" id="question-output"></div>
@@ -460,6 +788,32 @@
 
                 <div id="result" class="fine" style="margin-top:10px" role="status" aria-live="polite"></div>
             </div>
+
+            <!-- batch session flow (v2 tokens) -->
+            <div id="session-block" style="display:none;margin-top:14px">
+                <div class="row" style="gap:10px;flex-wrap:wrap">
+                    <span class="badge" id="session-title">Batch</span>
+                    <span class="small" id="session-progress" role="status" aria-live="polite">Q1 / 1</span>
+                    <span style="margin-left:auto" class="small" id="session-score"></span>
+                </div>
+                <div class="progress" aria-hidden="true">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+
+                <div class="output" id="session-question" style="margin-top:10px"></div>
+
+                <label style="margin-top:10px" for="sess-answer">Your answer</label>
+                <input id="sess-answer" type="text" placeholder="Type your answer here">
+                <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+                    <button id="btn-sess-submit">Submit</button>
+                    <button class="ghost" id="btn-sess-hint">Hint</button>
+                    <button class="ghost" id="btn-sess-skip">Skip</button>
+                    <button class="ghost" id="btn-sess-quit">End session</button>
+                </div>
+                <div id="sess-result" class="fine" style="margin-top:10px" role="status" aria-live="polite"></div>
+            </div>
+
+            <div id="session-summary" style="display:none;margin-top:14px"></div>
 
             <pre id="token-json" class="output" style="display:none;max-height:220px"></pre>
             <div class="madeby">Made by @kartik2005221 • <a href="https://tr.ee/ktk" target="_blank" rel="noopener noreferrer"
@@ -484,12 +838,20 @@
                         <option value="0">No</option>
                     </select>
                 </div>
+                <div style="flex:1">
+                    <label class="small" for="draft-save">Remember encoder draft</label>
+                    <select id="draft-save">
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
+                </div>
             </div>
 
             <div class="fine" style="margin-top:10px">Security reminder: this is client-side only. The token is safe
                 from casual inspection because it contains only a salted hash and not the plaintext answer. If you need
                 strict secrecy, use a server-side verifier or symmetric encryption with a secret key stored on the
-                server.
+                server. Draft memory stores question/answer text in this browser's localStorage — leave it off on
+                shared machines.
             </div>
         </section>
     </div>
@@ -574,8 +936,33 @@
         panelDec.hidden = isEnc;
     }
 
-    tabEnc.addEventListener('click', () => activateTab('enc'));
-    tabDec.addEventListener('click', () => activateTab('dec'));
+    tabEnc.addEventListener('click', () => goTab('enc'));
+    tabDec.addEventListener('click', () => goTab('dec'));
+
+    // Mode stickiness: #encode/#decode routes + remembered choice.
+    // The hash wins over the remembered mode so links can be shared directly.
+    function goTab(which, opts) {
+        activateTab(which);
+        if (opts && opts.updateHash === false) return;
+        history.replaceState(null, '', which === 'dec' ? '#decode' : '#encode');
+        try {
+            localStorage.setItem('av-mode', which);
+        } catch (e) {
+            /* private mode — mode just won't persist */
+        }
+    }
+
+    function modeFromLocation() {
+        return location.hash === '#decode' ? 'dec'
+            : location.hash === '#encode' ? 'enc'
+                : null;
+    }
+
+    window.addEventListener('hashchange', () => {
+        const wanted = modeFromLocation();
+        const current = panelDec.hidden ? 'enc' : 'dec';
+        if (wanted && wanted !== current) activateTab(wanted);
+    });
 
     document.querySelector('.tabs').addEventListener('keydown', (e) => {
         const current = tabs.findIndex(t => t.getAttribute('aria-selected') === 'true');
@@ -586,7 +973,7 @@
         else if (e.key === 'End') next = tabs[tabs.length - 1];
         if (!next) return;
         e.preventDefault();
-        activateTab(next === tabEnc ? 'enc' : 'dec');
+        goTab(next === tabEnc ? 'enc' : 'dec');
         next.focus();
     });
 
@@ -613,85 +1000,378 @@
         }
     }
 
+    // Paste buttons — injected into every .field.has-paste wrapper
+    const PASTE_ICON = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>';
+
+    async function pasteInto(id) {
+        const el = document.getElementById(id);
+        let clip = null;
+        try {
+            clip = await navigator.clipboard.readText();
+        } catch (e) {
+            /* denied / unavailable */
+        }
+        if (clip === null) {
+            showToast('Clipboard access was not granted', 'error');
+            return;
+        }
+        if (!clip.trim()) {
+            showToast('Clipboard is empty', 'error');
+            return;
+        }
+        el.value = clip.trim(); // select-all-and-paste semantics
+        el.focus();
+        el.dispatchEvent(new Event('input', {bubbles: true}));
+    }
+
+    document.querySelectorAll('.field.has-paste').forEach(f => {
+        const target = f.querySelector('input, textarea');
+        if (!target || !target.id) return;
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'paste-btn';
+        b.title = 'Paste from clipboard';
+        b.setAttribute('aria-label', 'Paste from clipboard into this field');
+        b.innerHTML = PASTE_ICON;
+        f.appendChild(b);
+    });
+
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.paste-btn');
+        if (!btn) return;
+        const target = btn.closest('.field').querySelector('input, textarea');
+        if (target) pasteInto(target.id);
+    });
+
     // Encoder logic
     const btnGenerate = document.getElementById('btn-generate');
 
+    // Fresh random salt for every token — never reused across tokens.
+    async function makeSaltedHash(answer, iterations) {
+        const saltHex = hexFromBytes(crypto.getRandomValues(new Uint8Array(16)));
+        const hashHex = await pbkdf2Hex(answer, saltHex, iterations);
+        return {saltHex, hashHex};
+    }
+
+    let lastExport = null;   // describes the last generation, for Save .json
+    let lastShareMeta = null;
+
     btnGenerate.addEventListener('click', async () => {
+        const iter = parseInt(document.getElementById('enc-iter').value || String(DEFAULT_ITERATIONS), 10);
+        const batchMode = !document.getElementById('batch-editor').hidden;
+        if (batchMode) {
+            await generateBatch(iter);
+        } else {
+            await generateSingle(iter);
+        }
+    });
+
+    async function generateSingle(iter) {
         const q = document.getElementById('enc-question').value.trim();
         const a = document.getElementById('enc-answer').value.trim();
         const hint = document.getElementById('enc-hint').value.trim();
-        const iter = parseInt(document.getElementById('enc-iter').value || String(DEFAULT_ITERATIONS), 10);
         if (!q || !a) {
             showToast('Question and answer are required', 'error');
             return;
         }
-        btnGenerate.disabled = true;
-        btnGenerate.textContent = 'Generating…';
-        try {
-            // Fresh random salt for every token — never reused across tokens.
-            const salt = crypto.getRandomValues(new Uint8Array(16));
-            const saltHex = hexFromBytes(salt);
-            const hashHex = await pbkdf2Hex(a, saltHex, iter);
-            const payload = {q: q, hint: hint || '', salt: saltHex, hash: hashHex, iter: iter};
+        await runGeneration(async () => {
             const fmt = document.getElementById('enc-format').value;
-            const j = fmt === 'pretty' ? JSON.stringify(payload, null, 2) : JSON.stringify(payload);
-            const token = jsonToB64(j);
-            document.getElementById('enc-token').value = token;
+            const {saltHex, hashHex} = await makeSaltedHash(a, iter);
+            const payload = {q: q, hint: hint, salt: saltHex, hash: hashHex, iter: iter};
+            lastExport = payload;
+            lastShareMeta = {kind: 'single', count: 1, title: ''};
+            document.getElementById('enc-token').value =
+                jsonToB64(fmt === 'pretty' ? JSON.stringify(payload, null, 2) : JSON.stringify(payload));
             showToast('Token generated', 'success');
-            if (document.getElementById('auto-copy').value === '1') {
-                const ok = await copyText(token);
-                showToast(ok ? 'Token copied to clipboard' : 'Auto-copy failed — copy it manually',
+        }, 'Generating…', 'Generate Token');
+    }
+
+    async function generateBatch(iter) {
+        const rows = [...document.querySelectorAll('#batch-rows .batch-row')];
+        const items = [];
+        for (const [i, row] of rows.entries()) {
+            const q = row.querySelector('.br-q').value.trim();
+            const a = row.querySelector('.br-a').value.trim();
+            if (!q || !a) {
+                showToast(`Row ${i + 1} needs both a question and an answer`, 'error');
+                return;
+            }
+            items.push({
+                label: row.querySelector('.br-label').value.trim(),
+                q: q,
+                hint: row.querySelector('.br-hint').value.trim(),
+                a: a
+            });
+        }
+        if (!items.length) {
+            showToast('Add at least one question first', 'error');
+            return;
+        }
+        const combined = document.getElementById('batch-combined').checked;
+        const pretty = document.getElementById('enc-format').value === 'pretty';
+        await runGeneration(async () => {
+            const built = [];
+            for (const [i, it] of items.entries()) {
+                btnGenerate.textContent = `Hashing ${i + 1}/${items.length}…`;
+                const {saltHex, hashHex} = await makeSaltedHash(it.a, iter);
+                built.push({
+                    label: it.label || ('Q' + (i + 1)),
+                    q: it.q,
+                    hint: it.hint,
+                    salt: saltHex,
+                    hash: hashHex,
+                    iter: iter
+                });
+            }
+            if (combined) {
+                // v2 batch payload — one token, sequential quiz in the Decoder.
+                const payload = {v: 2, title: document.getElementById('batch-title').value.trim(), items: built};
+                lastExport = payload;
+                lastShareMeta = {kind: 'batch', count: built.length, title: payload.title};
+                document.getElementById('enc-token').value =
+                    jsonToB64(JSON.stringify(payload, undefined, pretty ? 2 : undefined));
+            } else {
+                // N independent v1-compatible tokens, one per line.
+                const lines = built.map(it =>
+                    jsonToB64(JSON.stringify({
+                        label: it.label, q: it.q, hint: it.hint,
+                        salt: it.salt, hash: it.hash, iter: it.iter
+                    })));
+                lastExport = built.map((it, i) => ({token: lines[i], ...it}));
+                lastShareMeta = {kind: 'list', count: built.length, title: ''};
+                document.getElementById('enc-token').value = lines.join('\n\n');
+            }
+            showToast(`${built.length} question${built.length === 1 ? '' : 's'} → ${combined ? 'one batch token' : built.length + ' separate token(s)'}`, 'success');
+        }, 'Hashing…', 'Generate Tokens');
+    }
+
+    // Shared wrapper: busy state, auto-copy of the final output, error handling
+    async function runGeneration(fn, busyLabel, doneLabel) {
+        btnGenerate.disabled = true;
+        btnGenerate.textContent = busyLabel;
+        try {
+            await fn();
+            const out = document.getElementById('enc-token').value;
+            if (out && document.getElementById('auto-copy').value === '1') {
+                const ok = await copyText(out);
+                showToast(ok ? 'Output copied to clipboard' : 'Auto-copy failed — copy it manually',
                     ok ? 'success' : 'error');
             }
         } catch (err) {
-            showToast('Could not generate token — Web Crypto unavailable in this browser', 'error');
+            showToast('Could not generate — Web Crypto unavailable in this browser', 'error');
         } finally {
             btnGenerate.disabled = false;
-            btnGenerate.textContent = 'Generate Token';
+            btnGenerate.textContent = doneLabel;
+        }
+    }
+
+    // ---- Encoder modes: Single vs Batch ----
+    const singleEditor = document.getElementById('single-editor');
+    const batchEditor = document.getElementById('batch-editor');
+    const batchRowsEl = document.getElementById('batch-rows');
+
+    function setEncMode(mode) {
+        const batch = mode === 'batch';
+        singleEditor.hidden = batch;
+        batchEditor.hidden = !batch;
+        document.querySelector('.field-combined').hidden = !batch;
+        const b = document.getElementById('mode-batch');
+        const s = document.getElementById('mode-single');
+        s.classList.toggle('active', !batch);
+        b.classList.toggle('active', batch);
+        s.setAttribute('aria-pressed', String(!batch));
+        b.setAttribute('aria-pressed', String(batch));
+        if (!btnGenerate.disabled) btnGenerate.textContent = batch ? 'Generate Tokens' : 'Generate Token';
+        try {
+            localStorage.setItem('av-encmode', mode);
+        } catch (e) {
+            /* non-persistent */
+        }
+    }
+
+    document.getElementById('mode-single').addEventListener('click', () => setEncMode('single'));
+    document.getElementById('mode-batch').addEventListener('click', () => setEncMode('batch'));
+
+    function renumberRows() {
+        const rows = batchRowsEl.querySelectorAll('.batch-row');
+        rows.forEach((r, i) => r.querySelector('.row-num').textContent = i + 1);
+        document.getElementById('batch-count').textContent =
+            rows.length + (rows.length === 1 ? ' question ready' : ' questions ready');
+    }
+
+    function addBatchRow(data) {
+        data = data || {};
+        const row = document.createElement('div');
+        row.className = 'batch-row';
+        row.innerHTML =
+            '<span class="row-num" aria-hidden="true"></span>' +
+            '<input class="br-label" type="text" placeholder="Label" aria-label="Label">' +
+            '<input class="br-q" type="text" placeholder="Question" aria-label="Question">' +
+            '<input class="br-a" type="text" placeholder="Answer" aria-label="Answer">' +
+            '<input class="br-hint" type="text" placeholder="Hint" aria-label="Hint">' +
+            '<button type="button" class="br-del" title="Remove question" aria-label="Remove this question">×</button>';
+        row.querySelector('.br-label').value = data.label || '';
+        row.querySelector('.br-q').value = data.q || '';
+        row.querySelector('.br-a').value = data.a || '';
+        row.querySelector('.br-hint').value = data.hint || '';
+        batchRowsEl.appendChild(row);
+        renumberRows();
+        return row;
+    }
+
+    batchRowsEl.addEventListener('click', (e) => {
+        if (!e.target.classList.contains('br-del')) return;
+        e.target.closest('.batch-row').remove();
+        renumberRows();
+    });
+
+    document.getElementById('btn-add-row').addEventListener('click', () => {
+        addBatchRow().querySelector('.br-q').focus();
+    });
+
+    document.getElementById('btn-bulk-toggle').addEventListener('click', () => {
+        const w = document.getElementById('bulk-wrap');
+        w.hidden = !w.hidden;
+        if (!w.hidden) document.getElementById('bulk-input').focus();
+    });
+
+    document.getElementById('btn-bulk-parse').addEventListener('click', () => {
+        const lines = document.getElementById('bulk-input').value.split('\n')
+            .map(l => l.trim()).filter(Boolean);
+        let added = 0;
+        for (const line of lines) {
+            const parts = line.split('|').map(p => p.trim());
+            if (parts.length < 2 || !parts[0] || !parts[1]) continue;
+            addBatchRow({q: parts[0], a: parts[1], hint: parts[2] || '', label: parts[3] || ''});
+            added++;
+        }
+        if (added) {
+            document.getElementById('bulk-input').value = '';
+            document.getElementById('bulk-wrap').hidden = true;
+            showToast(`Added ${added} question${added === 1 ? '' : 's'} from ${lines.length} line${lines.length === 1 ? '' : 's'}`, 'success');
+        } else {
+            showToast('Nothing parsed — expected lines like "question | answer | hint"', 'error');
         }
     });
 
     document.getElementById('btn-clear-enc').addEventListener('click', () => {
-        document.getElementById('enc-question').value = '';
-        document.getElementById('enc-answer').value = '';
-        document.getElementById('enc-hint').value = '';
-        document.getElementById('enc-token').value = '';
+        for (const id of ['enc-question', 'enc-answer', 'enc-hint', 'enc-token', 'batch-title'])
+            document.getElementById(id).value = '';
+        batchRowsEl.innerHTML = '';
+        addBatchRow();
+        lastExport = null;
+        lastShareMeta = null;
+        try {
+            localStorage.removeItem('av-draft');
+        } catch (e) {
+            /* ignore */
+        }
     });
+
+    // ---- Output actions: copy / save / send ----
+    function requireOutput() {
+        const t = document.getElementById('enc-token').value.trim();
+        if (!t) {
+            showToast('Generate a token first', 'error');
+            return null;
+        }
+        return t;
+    }
+
+    function downloadFile(name, content, type) {
+        const blob = new Blob([content], {type: type});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    function shareMessage(token) {
+        const m = lastShareMeta || {kind: 'single', count: 1, title: ''};
+        const head = [];
+        if (m.title) head.push(m.title);
+        if (m.count > 1) head.push(`a set of ${m.count} questions`);
+        return (head.length ? head.join(' — ') + '\n\n' : '') +
+            `Paste this into the Decoder at ${location.origin}\n\n${token}`;
+    }
 
     const copyBtn = document.getElementById('copy-token');
     copyBtn.addEventListener('click', async () => {
-        const t = document.getElementById('enc-token').value;
-        if (!t) {
-            showToast('Nothing to copy yet — generate a token first', 'error');
-            return;
-        }
+        const t = requireOutput();
+        if (t === null) return;
         const ok = await copyText(t);
-        showToast(ok ? 'Token copied to clipboard' : 'Copy failed — select the token and copy manually',
+        showToast(ok ? 'Copied to clipboard' : 'Copy failed — select the text and copy manually',
             ok ? 'success' : 'error');
         if (ok) {
             copyBtn.textContent = 'Copied ✓';
             setTimeout(() => {
-                copyBtn.textContent = 'Copy token';
+                copyBtn.textContent = 'Copy';
             }, 1600);
         }
     });
 
     document.getElementById('download-token').addEventListener('click', () => {
-        const t = document.getElementById('enc-token').value;
-        if (!t) {
-            showToast('Nothing to download yet — generate a token first', 'error');
+        const t = requireOutput();
+        if (t === null) return;
+        const name = lastShareMeta && lastShareMeta.count > 1 ? 'tokens.txt' : 'token.txt';
+        downloadFile(name, t, 'text/plain');
+        showToast('Saved ' + name, 'success');
+    });
+
+    // JSON export — machine-readable output for CLI tooling (e.g. htb-cli)
+    document.getElementById('save-json').addEventListener('click', () => {
+        if (!lastExport) {
+            showToast('Generate a token first', 'error');
             return;
         }
-        const blob = new Blob([t], {type: 'text/plain'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'token.txt';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-        showToast('Saved token.txt', 'success');
+        downloadFile('tokens.json', JSON.stringify(lastExport, null, 2), 'application/json');
+        showToast('Saved tokens.json', 'success');
+    });
+
+    document.getElementById('share-native').addEventListener('click', async () => {
+        const t = requireOutput();
+        if (t === null) return;
+        if (navigator.share) {
+            try {
+                await navigator.share({title: document.title, text: shareMessage(t)});
+                showToast('Shared', 'success');
+            } catch (e) {
+                /* user cancelled the sheet */
+            }
+        } else {
+            const ok = await copyText(t);
+            showToast(navigator.canShare ? 'Sharing not supported here' :
+                ok ? 'No share sheet on this device — copied instead' : 'Could not share', ok ? 'success' : 'error');
+        }
+    });
+
+    function openShare(url) {
+        window.open(url, '_blank', 'noopener');
+    }
+
+    document.getElementById('share-wa').addEventListener('click', () => {
+        const t = requireOutput();
+        if (t === null) return;
+        openShare('https://wa.me/?text=' + encodeURIComponent(shareMessage(t)));
+    });
+
+    document.getElementById('share-tg').addEventListener('click', () => {
+        const t = requireOutput();
+        if (t === null) return;
+        openShare('https://t.me/share/url?url=' + encodeURIComponent(location.origin) +
+            '&text=' + encodeURIComponent(t));
+    });
+
+    document.getElementById('share-mail').addEventListener('click', () => {
+        const t = requireOutput();
+        if (t === null) return;
+        const m = lastShareMeta || {};
+        location.href = 'mailto:?subject=' + encodeURIComponent(m.title || 'Question token') +
+            '&body=' + encodeURIComponent(shareMessage(t));
     });
 
     // Decoder logic
@@ -730,18 +1410,25 @@
         }
         try {
             const obj = JSON.parse(b64ToJson(txt));
+            // v2 batch token → guided multi-question session
+            if (obj.v === 2 && Array.isArray(obj.items)) {
+                if (!obj.items.length) throw new Error('Empty batch');
+                startSession(obj);
+                return;
+            }
             if (!obj.q || !obj.salt || !obj.hash) throw new Error('Missing fields');
             loadedPayload = obj;
             attempts = 0;
             lockedUntil = 0;
             document.getElementById('question-block').style.display = 'block';
-            document.getElementById('question-output').textContent = obj.q;
+            document.getElementById('question-output').textContent =
+                (obj.label ? obj.label + ' — ' : '') + obj.q;
             document.getElementById('token-json').textContent = JSON.stringify(obj, null, 2);
             document.getElementById('token-json').style.display = 'none';
             updateAttemptsLabel();
             document.getElementById('result').textContent = '';
             document.getElementById('dec-answer').value = '';
-            activateTab('dec');
+            goTab('dec');
             // Convenience: jump straight to typing the answer
             document.getElementById('dec-answer').focus();
         } catch (e) {
@@ -777,6 +1464,159 @@
         document.getElementById('dec-token').value = '';
         document.getElementById('token-json').style.display = 'none';
     });
+
+    // ---- Batch sessions (v2 tokens): sequential quiz with progress + score ----
+    let session = null;
+
+    function startSession(payload) {
+        loadedPayload = null;
+        session = {items: payload.items, title: payload.title || '', idx: 0, results: [], finished: false, waiting: false};
+        attempts = 0;
+        lockedUntil = 0;
+        document.getElementById('question-block').style.display = 'none';
+        document.getElementById('session-summary').style.display = 'none';
+        document.getElementById('token-json').style.display = 'none';
+        document.getElementById('session-block').style.display = 'block';
+        document.getElementById('session-title').textContent = session.title || 'Batch';
+        renderCurrentItem();
+        goTab('dec');
+    }
+
+    function sessionProgressUI() {
+        const n = session.items.length;
+        const done = session.results.length;
+        const okN = session.results.filter(r => r.status === 'ok').length;
+        document.getElementById('session-progress').textContent =
+            `Q${Math.min(session.idx + 1, n)} / ${n}`;
+        document.getElementById('session-score').textContent =
+            done ? `${okN}/${done} correct` : '';
+        document.getElementById('progress-fill').style.width = (done / n * 100) + '%';
+    }
+
+    function renderCurrentItem() {
+        const it = session.items[session.idx];
+        document.getElementById('session-question').textContent =
+            (it.label ? it.label + ' — ' : '') + it.q;
+        const ansEl = document.getElementById('sess-answer');
+        ansEl.value = '';
+        document.getElementById('sess-result').textContent = '';
+        session.waiting = false;
+        updateAttemptsLabel();
+        sessionProgressUI();
+        ansEl.focus();
+    }
+
+    function advanceSession() {
+        if (!session || session.finished) return;
+        session.idx++;
+        if (session.idx >= session.items.length) endSession();
+        else renderCurrentItem();
+    }
+
+    async function submitSessAnswer() {
+        if (!session || session.finished || session.waiting) return;
+        const now = Date.now();
+        if (lockedUntil > now) {
+            showToast('Locked — wait ' + Math.ceil((lockedUntil - now) / 1000) + ' more seconds', 'error');
+            return;
+        }
+        if (lockedUntil !== 0 && lockedUntil <= now) {
+            attempts = 0;
+            lockedUntil = 0;
+            updateAttemptsLabel();
+        }
+        const guess = document.getElementById('sess-answer').value.trim();
+        if (!guess) {
+            showToast('Type an answer (or "hint")', 'error');
+            return;
+        }
+        const it = session.items[session.idx];
+        const resEl = document.getElementById('sess-result');
+        if (guess.toLowerCase() === 'hint') {
+            resEl.textContent = 'Hint: ' + (it.hint || 'No hint');
+            return;
+        }
+        attempts += 1;
+        updateAttemptsLabel();
+        // Honor the iteration count embedded in each item (older items use their own value).
+        const hashHex = await pbkdf2Hex(guess, it.salt, parseInt(it.iter || DEFAULT_ITERATIONS, 10));
+        if (hashHex === it.hash) {
+            session.results.push({item: it, status: 'ok'});
+            session.waiting = true;
+            resEl.innerHTML = '<span class="status ok">Correct</span>';
+            showToast((it.label || 'Question') + ' correct', 'success');
+            setTimeout(advanceSession, 650);
+        } else {
+            const max = parseInt(document.getElementById('max-attempts').value || '0', 10);
+            if (max > 0 && attempts >= max) {
+                const cd = parseInt(document.getElementById('cooldown').value || '30', 10);
+                lockedUntil = Date.now() + cd * 1000;
+                resEl.innerHTML = '<span class="status bad">Locked</span> Wait ' + cd + ' seconds.';
+                showToast('Locked due to too many attempts', 'error');
+            } else {
+                resEl.innerHTML = '<span class="status bad">Wrong</span> Try again.';
+            }
+        }
+    }
+
+    function skipCurrent() {
+        if (!session || session.finished || session.waiting) return;
+        session.results.push({item: session.items[session.idx], status: 'skip'});
+        advanceSession();
+    }
+
+    function endSession() {
+        if (!session) return;
+        while (session.results.length < session.items.length) {
+            session.results.push({item: session.items[session.results.length], status: 'skip'});
+        }
+        session.finished = true;
+        const n = session.items.length;
+        const okN = session.results.filter(r => r.status === 'ok').length;
+        const chips = session.results.map(r =>
+            `<span class="chip ${r.status === 'ok' ? 'ok' : r.status === 'skip' ? 'skip' : 'bad'}" ` +
+            `role="listitem">${escapeHtml(r.item.label || '?')} ` +
+            `${r.status === 'ok' ? '✓' : r.status === 'skip' ? '·' : '✗'}</span>`).join('');
+        const sumEl = document.getElementById('session-summary');
+        sumEl.innerHTML =
+            `<h2 style="font-size:16px;margin:0 0 6px">Set complete — ${okN} / ${n} correct</h2>` +
+            `<div class="summary-grid" role="list">${chips}</div>` +
+            `<div class="controls">` +
+            `<button type="button" data-act="retry">Retry missed ones</button>` +
+            `<button type="button" class="ghost" data-act="restart">Restart set</button>` +
+            `</div>`;
+        document.getElementById('session-block').style.display = 'none';
+        sumEl.style.display = 'block';
+        sessionProgressUI();
+        showToast(`Set complete: ${okN}/${n} correct`, okN === n ? 'success' : '');
+    }
+
+    document.getElementById('session-summary').addEventListener('click', (e) => {
+        const b = e.target.closest('button[data-act]');
+        if (!b || !session) return;
+        if (b.dataset.act === 'retry') {
+            const missed = session.results.filter(r => r.status !== 'ok').map(r => r.item);
+            if (!missed.length) return;
+            startSession({title: (session.title ? session.title + ' — retry' : 'Retry'), items: missed});
+        } else if (b.dataset.act === 'restart') {
+            startSession({title: session.title, items: session.items});
+        }
+    });
+
+    document.getElementById('btn-sess-submit').addEventListener('click', submitSessAnswer);
+    document.getElementById('btn-sess-skip').addEventListener('click', skipCurrent);
+    document.getElementById('btn-sess-hint').addEventListener('click', () => {
+        if (!session || session.finished) return;
+        const it = session.items[session.idx];
+        document.getElementById('sess-result').textContent = 'Hint: ' + (it.hint || 'No hint');
+    });
+    document.getElementById('btn-sess-quit').addEventListener('click', endSession);
+
+    // Escape HTML for anything injected into summary markup
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c =>
+            ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+    }
 
     async function submitAnswer() {
         const now = Date.now();
@@ -856,6 +1696,12 @@
                 submitAnswer();
             }
         });
+        document.getElementById('sess-answer').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitSessAnswer();
+            }
+        });
         document.getElementById('enc-answer').addEventListener('keydown', function (e) {
             if (e.key === 'Enter' && e.ctrlKey) {
                 e.preventDefault();
@@ -865,8 +1711,7 @@
     })();
 
     // Settings persistence — remembers tool settings between visits.
-    // Deliberately does NOT persist question/answer text (secrets don't belong in localStorage).
-    const SETTING_IDS = ['enc-iter', 'max-attempts', 'cooldown', 'auto-copy'];
+    const SETTING_IDS = ['enc-iter', 'max-attempts', 'cooldown', 'auto-copy', 'draft-save'];
 
     function saveSettings() {
         const s = {};
@@ -890,11 +1735,75 @@
         }
     }
 
+    // Draft persistence — OPT-IN ("Remember encoder draft"), because answers are
+    // secrets and shouldn't sit in localStorage by default on shared machines.
+    const DRAFT_FIELDS = ['enc-question', 'enc-answer', 'enc-hint', 'batch-title'];
+    let draftTimer = null;
+
+    function draftEnabled() {
+        return document.getElementById('draft-save').value === '1';
+    }
+
+    function scheduleDraftSave() {
+        if (!draftEnabled()) return;
+        clearTimeout(draftTimer);
+        draftTimer = setTimeout(() => {
+            const d = {rows: []};
+            batchRowsEl.querySelectorAll('.batch-row').forEach(r => d.rows.push({
+                label: r.querySelector('.br-label').value,
+                q: r.querySelector('.br-q').value,
+                a: r.querySelector('.br-a').value,
+                hint: r.querySelector('.br-hint').value
+            }));
+            d.encmode = batchEditor.hidden ? 'single' : 'batch';
+            for (const id of DRAFT_FIELDS) d[id] = document.getElementById(id).value;
+            try {
+                localStorage.setItem('av-draft', JSON.stringify(d));
+            } catch (e) {
+                /* ignore */
+            }
+        }, 400);
+    }
+
+    function loadDraft() {
+        if (!draftEnabled()) return;
+        let d;
+        try {
+            d = JSON.parse(localStorage.getItem('av-draft') || 'null');
+        } catch (e) {
+            return;
+        }
+        if (!d) return;
+        for (const id of DRAFT_FIELDS) {
+            if (typeof d[id] === 'string') document.getElementById(id).value = d[id];
+        }
+        (Array.isArray(d.rows) ? d.rows : []).forEach(r => addBatchRow(r));
+        if (d.encmode === 'batch') setEncMode('batch');
+    }
+
     SETTING_IDS.forEach(id => document.getElementById(id).addEventListener('change', saveSettings));
+    document.addEventListener('input', scheduleDraftSave);
 
     // init
     loadSettings();
-    activateTab('enc');
+    loadDraft();
+    if (!batchRowsEl.querySelector('.batch-row')) addBatchRow(); // Batch view never starts empty
+    renumberRows();
+    setEncMode((() => {
+        try {
+            return localStorage.getItem('av-encmode') === 'batch' ? 'batch' : 'single';
+        } catch (e) {
+            return 'single';
+        }
+    })());
+    goTab(modeFromLocation() ||
+        (() => {
+            try {
+                return localStorage.getItem('av-mode') === 'dec' ? 'dec' : 'enc';
+            } catch (e) {
+                return 'enc';
+            }
+        })(), {updateHash: false});
 </script>
 </body>
 </html>
